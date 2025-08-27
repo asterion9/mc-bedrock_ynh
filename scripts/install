@@ -27,10 +27,25 @@ ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds all
 chmod o+x "$install_dir/bedrock_server"
 
 #=================================================
+# SETUP DATA PERSISTENCE WITH SYMLINKS
+#=================================================
+ynh_script_progression --message="Setting up data persistence..." --weight=5
+
+# Create data directory structure
+mkdir -p "$data_dir/worlds"
+mkdir -p "$data_dir/config"
+
+# Create symlinks from app directory to data directory
+ln -sf "$data_dir/worlds" "$install_dir/worlds"
+ln -sf "$data_dir/config/allowlist.json" "$install_dir/allowlist.json"
+ln -sf "$data_dir/config/permissions.json" "$install_dir/permissions.json"
+ln -sf "$data_dir/config/server.properties" "$install_dir/server.properties"
+
+#=================================================
 # MODIFY A CONFIG FILE
 #=================================================
 
-ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
+ynh_add_config --template="server.properties" --destination="$data_dir/config/server.properties"
 
 #=================================================
 # SETUP SYSTEMD
