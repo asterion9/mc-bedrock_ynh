@@ -17,6 +17,8 @@ source /usr/share/yunohost/helpers
 
 ynh_script_progression --message="Removing system configurations related to $app..." --weight=1
 
+stop_mc_service
+
 ynh_remove_systemd_config
 
 #=================================================

@@ -17,6 +17,10 @@ source /usr/share/yunohost/helpers
 
 ynh_script_progression --message="Restoring Minecraft data..." --weight=1
 
+stop_mc_service
+
 ynh_restore --origin_path="$install_dir/worlds"
+
+start_mc_service
 
 ynh_script_progression --message="Restore completed" --last
