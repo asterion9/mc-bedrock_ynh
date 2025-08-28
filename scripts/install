@@ -37,7 +37,7 @@ ynh_add_config --template="server.properties" --destination="$install_dir/config
 #=================================================
 ynh_script_progression --message="Configuring a systemd service..." --weight=2
 
-ynh_config_add_systemd
+ynh_add_systemd_config
 
 yunohost service add $app --description="Three-dimensional sandbox construction game" --log="/var/log/$app/$app.log" --needs_exposed_ports="$port"
 
