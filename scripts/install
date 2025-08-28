@@ -30,7 +30,7 @@ chmod o+x "$install_dir/bedrock_server"
 # MODIFY A CONFIG FILE
 #=================================================
 
-ynh_add_config --template="server.properties" --destination="$install_dir/config/server.properties"
+ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
 
 #=================================================
 # SETUP SYSTEMD
