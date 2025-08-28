@@ -14,21 +14,9 @@ source /usr/share/yunohost/helpers
 #=================================================
 # RESTORE THE APP MAIN DIR
 #=================================================
-ynh_script_progression --message="Stopping Minecraft service for restore..." --weight=1
-
-# Stop the service before restore to ensure data consistency
-ynh_systemd_action --service_name=$app --action=stop --log_path=systemd  --line_match=".*Stopped minecraft_bedrock.service.*"
 
 ynh_script_progression --message="Restoring Minecraft data..." --weight=1
 
-# Restore worlds directory
-if ynh_backup_exists --path="$data_dir"; then
-    ynh_restore_file --origin_path="$data_dir"
-fi
-
-ynh_script_progression --message="Starting Minecraft service..." --weight=1
-
-# Start the service after restore
-ynh_systemd_action --service_name=$app --action=start --log_path=systemd --line_match=".*INFO] Server started."
+ynh_restore --origin_path="$install_dir/worlds"
 
 ynh_script_progression --message="Restore completed" --last

@@ -14,14 +14,6 @@ source /usr/share/yunohost/helpers
 #=================================================
 # REMOVE SERVICE FROM ADMIN PANEL
 #=================================================
-ynh_script_progression --message="Stopping Minecraft service..." --weight=1 --line_match=".*Stopped minecraft_bedrock.service.*"
-
-ynh_script_progression --message="Backing up Minecraft data..." --weight=1
-
-ynh_backup --src_path="$data_dir"
-
-# Stop the service before removal
-ynh_systemd_action --service_name=$app --action=stop --log_path=systemd
 
 ynh_script_progression --message="Removing system configurations related to $app..." --weight=1
 

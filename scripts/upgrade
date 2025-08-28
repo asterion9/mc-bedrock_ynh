@@ -14,23 +14,11 @@ source /usr/share/yunohost/helpers
 #=================================================
 ynh_script_progression --message="Upgrading Minecraft Bedrock Server..." --weight=1
 
-# Stop the service before upgrade
-ynh_script_progression --message="Stopping Minecraft service..." --weight=1
-ynh_systemd_action --service_name=$app --action=stop --log_path=systemd 
-
-# Backup current data before upgrade
-ynh_script_progression --message="Backing up current data..." --weight=1
-
-ynh_backup --src_path="$data_dir"
-
 # Download and setup new source
 ynh_script_progression --message="Downloading new version..." --weight=1
+
 ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds allowlist.json permissions.json server.properties"
 
 chmod o+x "$install_dir/bedrock_server"
-
-# Start the service after upgrade
-ynh_script_progression --message="Starting Minecraft service..." --weight=1
-ynh_systemd_action --service_name=$app --action=start --log_path=systemd --line_match=".*INFO] Server started."
 
 ynh_script_progression --message="Upgrade completed" --last

@@ -12,18 +12,9 @@ source /usr/share/yunohost/helpers
 #=================================================
 # DECLARE DATA AND CONF FILES TO BACKUP
 #=================================================
-ynh_script_progression --message="Stopping Minecraft service for backup..." --weight=1
-
-# Stop the service before backup to ensure data consistency
-ynh_systemd_action --service_name=$app --action=stop --log_path=systemd --line_match=".*INFO] Server started."
 
 ynh_script_progression --message="Backing up Minecraft data..." --weight=1
 
-ynh_backup --src_path="$data_dir"
-
-ynh_script_progression --message="Starting Minecraft service..." --weight=1
-
-# Start the service after backup
-ynh_systemd_action --service_name=$app --action=start --log_path=systemd --line_match=".*Stopped minecraft_bedrock.service.*"
+ynh_backup --src_path="$install_dir/worlds"
 
 ynh_script_progression --message="Backup completed" --last
