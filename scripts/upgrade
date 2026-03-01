@@ -20,6 +20,58 @@ if is_mc_service_running; then
     stop_mc_service
 fi
 
+#=================================================
+# BACKFILL SETTINGS FROM EXISTING CONFIG
+#=================================================
+
+server_properties="$install_dir/server.properties"
+
+# Read a key from server.properties (first non-comment match wins).
+get_server_property() {
+    local key="$1"
+    local file="$2"
+    [ -f "$file" ] || return 0
+    awk -F= -v k="$key" '
+        /^[[:space:]]*#/ { next }
+        /^[[:space:]]*$/ { next }
+        {
+            line=$0
+            keypart=$1
+            sub(/^[[:space:]]+/, "", keypart)
+            sub(/[[:space:]]+$/, "", keypart)
+            if (keypart == k) {
+                sub(/^[^=]*=/, "", line)
+                print line
+                exit
+            }
+        }
+    ' "$file"
+}
+
+setting_server_name="$(ynh_app_setting_get --key="server_name")"
+setting_gamemode="$(ynh_app_setting_get --key="gamemode")"
+setting_difficulty="$(ynh_app_setting_get --key="difficulty")"
+setting_level_seed="$(ynh_app_setting_get --key="level_seed")"
+setting_level_name="$(ynh_app_setting_get --key="level_name")"
+
+[ -n "$setting_server_name" ] || setting_server_name="$(get_server_property "server-name" "$server_properties")"
+[ -n "$setting_gamemode" ] || setting_gamemode="$(get_server_property "gamemode" "$server_properties")"
+[ -n "$setting_difficulty" ] || setting_difficulty="$(get_server_property "difficulty" "$server_properties")"
+[ -n "$setting_level_seed" ] || setting_level_seed="$(get_server_property "level-seed" "$server_properties")"
+[ -n "$setting_level_name" ] || setting_level_name="$(get_server_property "level-name" "$server_properties")"
+
+# Last-resort defaults when neither setting nor existing config contains the key.
+[ -n "$setting_server_name" ] || setting_server_name="Bedrock Server"
+[ -n "$setting_gamemode" ] || setting_gamemode="creative"
+[ -n "$setting_difficulty" ] || setting_difficulty="easy"
+[ -n "$setting_level_name" ] || setting_level_name="bedrock_level"
+
+ynh_app_setting_set --key="server_name" --value="$setting_server_name"
+ynh_app_setting_set --key="gamemode" --value="$setting_gamemode"
+ynh_app_setting_set --key="difficulty" --value="$setting_difficulty"
+ynh_app_setting_set --key="level_seed" --value="$setting_level_seed"
+ynh_app_setting_set --key="level_name" --value="$setting_level_name"
+
 # Refresh source files to the target version.
 ynh_script_progression --message="Refreshing source files..." --weight=1
 
@@ -29,8 +81,6 @@ chmod o+x "$install_dir/bedrock_server"
 
 # Ensure worlds path always points to persistent data_dir.
 mkdir -p "$data_dir/worlds"
-touch "$data_dir/KEEP"
-chown "$app:$app" "$data_dir/KEEP"
 if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
     ynh_secure_remove --file="$install_dir/worlds"
 fi
