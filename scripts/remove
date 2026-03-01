@@ -20,6 +20,7 @@ ynh_script_progression --message="Removing system configurations related to $app
 stop_mc_service
 
 ynh_remove_systemd_config
+yunohost service remove $app
 
 #=================================================
 # END OF SCRIPT

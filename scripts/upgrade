@@ -19,9 +19,20 @@ stop_mc_service
 # Download and setup new source
 ynh_script_progression --message="Downloading new version..." --weight=1
 
-ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds allowlist.json permissions.json server.properties"
+ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds"
 
 chmod o+x "$install_dir/bedrock_server"
+
+#=================================================
+# DEPLOY APP-MANAGED CONFIG FILES
+#=================================================
+
+ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
+ynh_add_config --template="allowlist.json" --destination="$install_dir/allowlist.json"
+ynh_add_config --template="permissions.json" --destination="$install_dir/permissions.json"
+
+ynh_add_systemd_config
+yunohost service add $app --description="Three-dimensional sandbox construction game" --log="/var/log/$app/$app.log" --needs_exposed_ports="$port"
 
 start_mc_service
 

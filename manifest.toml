@@ -6,10 +6,24 @@ description.en = "Three-dimensional sandbox construction game"
 
 version = "1.21.102.1~ynh1"
 
+[upstream]
+license = "GPL-3.0-only"
+
+[install]
+    [install.description]
+    type = "markdown"
+    ask.en = "This package installs a Minecraft Bedrock dedicated server."
+
+    [install.info]
+    type = "alert"
+    ask.en = "No installation questions are required."
+
 [integration]
 yunohost = ">= 11.2"
 architectures = ["amd64"]
 multi_instance = false
+ldap = false
+sso = false
 
 disk = "100M"
 ram.build = "50M"

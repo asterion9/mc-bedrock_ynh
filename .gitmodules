@@ -1,0 +1,6 @@
+[submodule "tools/package_linter"]
+	path = tools/package_linter
+	url = https://github.com/YunoHost/package_linter.git
+[submodule "tools/package_check"]
+	path = tools/package_check
+	url = https://github.com/YunoHost/package_check.git

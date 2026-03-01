@@ -6,19 +6,13 @@
 # IMPORT GENERIC HELPERS
 #=================================================
 
-source _common.sh
+source ../settings/scripts/_common.sh
 source /usr/share/yunohost/helpers
 
 #=================================================
 # DECLARE DATA AND CONF FILES TO BACKUP
 #=================================================
 
-ynh_script_progression --message="Backing up Minecraft data..." --weight=1
-
-stop_mc_service
+ynh_print_info "Declaring Minecraft data to be backed up..."
 
 ynh_backup --src_path="$install_dir/worlds"
-
-start_mc_service
-
-ynh_script_progression --message="Backup completed" --last

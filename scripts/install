@@ -22,15 +22,17 @@ source /usr/share/yunohost/helpers
 #=================================================
 ynh_script_progression --message="Setting up source files..." --weight=10
 
-ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds allowlist.json permissions.json server.properties"
+ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds"
 
 chmod o+x "$install_dir/bedrock_server"
 
 #=================================================
-# MODIFY A CONFIG FILE
+# DEPLOY APP-MANAGED CONFIG FILES
 #=================================================
 
 ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
+ynh_add_config --template="allowlist.json" --destination="$install_dir/allowlist.json"
+ynh_add_config --template="permissions.json" --destination="$install_dir/permissions.json"
 
 #=================================================
 # SETUP SYSTEMD

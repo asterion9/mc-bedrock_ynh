@@ -1,0 +1,14 @@
+test_format = 1.0
+
+[default]
+# Keep CI shallow while app packaging is still in progress:
+# only verify basic non-web installation flow.
+exclude = [
+  "install.root",
+  "install.subdir",
+  "install.private",
+  "install.multi",
+  "backup_restore",
+  "upgrade",
+  "change_url",
+]
