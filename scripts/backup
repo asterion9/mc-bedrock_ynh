@@ -15,4 +15,7 @@ source /usr/share/yunohost/helpers
 
 ynh_print_info "Declaring Minecraft data to be backed up..."
 
-ynh_backup --src_path="$install_dir/worlds"
+ynh_backup --src_path="$data_dir"
+ynh_backup --src_path="$install_dir/server.properties"
+ynh_backup --src_path="$install_dir/allowlist.json"
+ynh_backup --src_path="$install_dir/permissions.json"

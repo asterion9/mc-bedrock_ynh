@@ -28,9 +28,21 @@ ynh_app_setting_set --key="level_name" --value="$level_name"
 #=================================================
 ynh_script_progression --message="Setting up source files..." --weight=10
 
-ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds"
+ynh_setup_source --dest_dir="$install_dir" --source_id="main"
 
 chmod o+x "$install_dir/bedrock_server"
+
+# Persist worlds outside install_dir and expose it from install_dir via symlink.
+mkdir -p "$data_dir/worlds"
+chown -R "$app:$app" "$data_dir/worlds"
+touch "$data_dir/KEEP"
+chown "$app:$app" "$data_dir/KEEP"
+if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
+    # Migrate pre-existing worlds into persistent data_dir before replacing path with symlink.
+    cp -a "$install_dir/worlds/." "$data_dir/worlds/" 2>/dev/null || true
+    ynh_secure_remove --file="$install_dir/worlds"
+fi
+ln -sfn "$data_dir/worlds" "$install_dir/worlds"
 
 #=================================================
 # DEPLOY APP-MANAGED CONFIG FILES

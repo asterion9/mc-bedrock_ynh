@@ -14,14 +14,27 @@ source /usr/share/yunohost/helpers
 #=================================================
 ynh_script_progression --message="Upgrading Minecraft Bedrock Server..." --weight=1
 
-stop_mc_service
+was_running=0
+if is_mc_service_running; then
+    was_running=1
+    stop_mc_service
+fi
 
-# Download and setup new source
-ynh_script_progression --message="Downloading new version..." --weight=1
+# Refresh source files to the target version.
+ynh_script_progression --message="Refreshing source files..." --weight=1
 
-ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds"
+ynh_setup_source --dest_dir="$install_dir" --source_id="main"
 
 chmod o+x "$install_dir/bedrock_server"
+
+# Ensure worlds path always points to persistent data_dir.
+mkdir -p "$data_dir/worlds"
+touch "$data_dir/KEEP"
+chown "$app:$app" "$data_dir/KEEP"
+if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
+    ynh_secure_remove --file="$install_dir/worlds"
+fi
+ln -sfn "$data_dir/worlds" "$install_dir/worlds"
 
 #=================================================
 # DEPLOY APP-MANAGED CONFIG FILES
@@ -34,6 +47,8 @@ ynh_add_config --template="permissions.json" --destination="$install_dir/permiss
 ynh_add_systemd_config
 yunohost service add $app --description="Three-dimensional sandbox construction game" --log="/var/log/$app/$app.log" --needs_exposed_ports="$port"
 
-start_mc_service
+if [ "$was_running" -eq 1 ]; then
+    start_mc_service
+fi
 
 ynh_script_progression --message="Upgrade completed" --last

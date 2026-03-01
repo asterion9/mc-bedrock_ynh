@@ -17,9 +17,29 @@ source /usr/share/yunohost/helpers
 
 ynh_script_progression --message="Restoring Minecraft data..." --weight=1
 
-stop_mc_service
+# Ensure default config files exist even if backup does not contain them.
+ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
+ynh_add_config --template="allowlist.json" --destination="$install_dir/allowlist.json"
+ynh_add_config --template="permissions.json" --destination="$install_dir/permissions.json"
 
-ynh_restore --origin_path="$install_dir/worlds"
+# Restore archived data/config when present.
+ynh_restore_file --origin_path="$data_dir" --not_mandatory
+ynh_restore_file --origin_path="$install_dir/server.properties" --not_mandatory
+ynh_restore_file --origin_path="$install_dir/allowlist.json" --not_mandatory
+ynh_restore_file --origin_path="$install_dir/permissions.json" --not_mandatory
+
+# Keep worlds target available even if no backup data existed.
+mkdir -p "$data_dir/worlds"
+chown -R "$app:$app" "$data_dir/worlds"
+
+# Recreate expected worlds path from install_dir to persistent data_dir.
+if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
+    ynh_secure_remove --file="$install_dir/worlds"
+fi
+ln -sfn "$data_dir/worlds" "$install_dir/worlds"
+
+ynh_add_systemd_config
+yunohost service add $app --description="Three-dimensional sandbox construction game" --log="/var/log/$app/$app.log" --needs_exposed_ports="$port"
 
 start_mc_service
 

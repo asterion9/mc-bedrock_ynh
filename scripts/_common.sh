@@ -9,11 +9,21 @@
 #=================================================
 
 start_mc_service() {
-    ynh_systemd_action --service_name=$app --action=start --log_path=systemd --line_match=".*INFO] Server started."
+    ynh_systemd_action --service_name=$app --action=start
 }
 
 stop_mc_service() {
-    ynh_systemd_action --service_name=$app --action=stop --log_path=systemd --line_match=".*Stopped minecraft_bedrock.service.*"
+    ynh_systemd_action --service_name=$app --action=stop
+}
+
+is_mc_service_running() {
+    systemctl is-active --quiet "$app"
+}
+
+stop_mc_service_if_running() {
+    if is_mc_service_running; then
+        stop_mc_service
+    fi
 }
 
 

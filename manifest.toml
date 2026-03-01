@@ -77,6 +77,8 @@ ram.runtime = "500M"
 
     [resources.system_user]
 
+    [resources.data_dir]
+
     [resources.install_dir]
 
     [resources.permissions]
