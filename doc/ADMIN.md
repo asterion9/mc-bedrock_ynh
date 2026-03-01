@@ -4,7 +4,7 @@ This page contains operational information for administrators of the `minecraft_
 
 ## Network
 
-- Default gameplay port: `19132/UDP`
+- Configured gameplay port: `__PORT__/UDP`
 - External access depends on the full network path (host firewall, router/NAT, upstream filtering).
 
 ## Data and Configuration

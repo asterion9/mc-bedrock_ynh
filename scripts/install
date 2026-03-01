@@ -16,6 +16,12 @@ source /usr/share/yunohost/helpers
 #=================================================
 # STORE SETTINGS FROM MANIFEST
 #=================================================
+mc_port="$port"
+level_name="$(printf '%s' "$server_name" \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed -E 's/[^a-z0-9]+/_/g; s/^_+//; s/_+$//; s/_+/_/g')"
+[ -n "$level_name" ] || level_name="bedrock_level"
+ynh_app_setting_set --key="level_name" --value="$level_name"
 
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
@@ -42,6 +48,7 @@ ynh_script_progression --message="Configuring a systemd service..." --weight=2
 ynh_add_systemd_config
 
 yunohost service add $app --description="Three-dimensional sandbox construction game" --log="/var/log/$app/$app.log" --needs_exposed_ports="$port"
+ynh_print_info --message="IMPORTANT: Minecraft Bedrock is listening on UDP port ${mc_port}."
 
 
 #=================================================

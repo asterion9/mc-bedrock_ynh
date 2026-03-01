@@ -7,7 +7,6 @@ exclude = [
   "install.root",
   "install.subdir",
   "install.private",
-  "install.multi",
   "backup_restore",
   "upgrade",
   "change_url",

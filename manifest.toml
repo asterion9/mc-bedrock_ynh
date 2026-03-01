@@ -16,17 +16,50 @@ license = "GPL-3.0-only"
 
     [install.info]
     type = "alert"
-    ask.en = "No installation questions are required."
+    ask.en = "You can configure initial server name, game mode, difficulty, and world seed."
+
+    [install.server_name]
+    type = "string"
+    default = "Bedrock Server"
+    optional = true
+    ask.en = "Server name"
+    help.en = "Used as the server name. Allowed values: any string without semicolon (;)."
+    [install.server_name.pattern]
+    regexp = "^[^;]*$"
+    error = "Server name cannot contain ';'."
+
+    [install.gamemode]
+    type = "select"
+    default = "creative"
+    optional = true
+    ask.en = "Game mode"
+    help.en = "Sets the game mode for new players."
+    choices = ["survival", "creative", "adventure"]
+
+    [install.difficulty]
+    type = "select"
+    default = "easy"
+    optional = true
+    ask.en = "Difficulty"
+    help.en = "Sets the world difficulty."
+    choices = ["peaceful", "easy", "normal", "hard"]
+
+    [install.level_seed]
+    type = "string"
+    default = ""
+    optional = true
+    ask.en = "Level seed"
+    help.en = "Seed used to generate the world. Allowed values: any string. Leave empty for random generation."
 
 [integration]
 yunohost = ">= 11.2"
 architectures = ["amd64"]
-multi_instance = false
+multi_instance = true
 ldap = false
 sso = false
 
-disk = "100M"
-ram.build = "50M"
+disk = "200M"
+ram.build = "200M"
 ram.runtime = "500M"
 
 [resources]
@@ -40,6 +73,7 @@ ram.runtime = "500M"
     [resources.ports]
     main.default = 19132
     main.exposed = "UDP"
+    main.fixed = false
 
     [resources.system_user]
 
