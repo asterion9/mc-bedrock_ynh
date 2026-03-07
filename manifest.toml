@@ -4,7 +4,7 @@ id = "minecraft_bedrock"
 name = "Minecraft Bedrock Server"
 description.en = "Three-dimensional sandbox construction game"
 
-version = "1.21.102.1~ynh1"
+version = "1.26.3.1~ynh1"
 
 [upstream]
 license = "GPL-3.0-only"
@@ -65,8 +65,8 @@ ram.runtime = "500M"
 [resources]
     [resources.sources]
         [resources.sources.main]
-        url = "https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-1.21.102.1.zip"
-        sha256 = "87dc223a4bbdd15a0cc39d9b3630d4ae50e635898543a087ab8ef97cc0f9432e"
+        url = "https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-1.26.3.1.zip"
+        sha256 = "1b03ac717d239d47a3f374dba673125d3f2a6a05968b5933f9e87affceb6b9c8"
         in_subdir = false
         extract = true
 
