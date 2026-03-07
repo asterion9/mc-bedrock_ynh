@@ -30,22 +30,26 @@ server_properties="$install_dir/server.properties"
 get_server_property() {
     local key="$1"
     local file="$2"
+    local line keypart value
     [ -f "$file" ] || return 0
-    awk -F= -v k="$key" '
-        /^[[:space:]]*#/ { next }
-        /^[[:space:]]*$/ { next }
-        {
-            line=$0
-            keypart=$1
-            sub(/^[[:space:]]+/, "", keypart)
-            sub(/[[:space:]]+$/, "", keypart)
-            if (keypart == k) {
-                sub(/^[^=]*=/, "", line)
-                print line
-                exit
-            }
-        }
-    ' "$file"
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            ""|[[:space:]]*'#'*)
+                continue
+                ;;
+        esac
+
+        keypart="${line%%=*}"
+        [ "$keypart" = "$line" ] && continue
+        keypart="$(printf '%s' "$keypart" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+
+        if [ "$keypart" = "$key" ]; then
+            value="${line#*=}"
+            value="${value%$'\r'}"
+            printf '%s' "$value"
+            return 0
+        fi
+    done < "$file"
 }
 
 setting_server_name="$(ynh_app_setting_get --key="server_name")"
@@ -64,6 +68,7 @@ setting_level_name="$(ynh_app_setting_get --key="level_name")"
 [ -n "$setting_server_name" ] || setting_server_name="Bedrock Server"
 [ -n "$setting_gamemode" ] || setting_gamemode="creative"
 [ -n "$setting_difficulty" ] || setting_difficulty="easy"
+[ -n "$setting_level_seed" ] || setting_level_seed=""
 [ -n "$setting_level_name" ] || setting_level_name="bedrock_level"
 
 ynh_app_setting_set --key="server_name" --value="$setting_server_name"
@@ -71,6 +76,13 @@ ynh_app_setting_set --key="gamemode" --value="$setting_gamemode"
 ynh_app_setting_set --key="difficulty" --value="$setting_difficulty"
 ynh_app_setting_set --key="level_seed" --value="$setting_level_seed"
 ynh_app_setting_set --key="level_name" --value="$setting_level_name"
+
+# Export values expected by template placeholders (__SERVER_NAME__, etc.).
+server_name="$setting_server_name"
+gamemode="$setting_gamemode"
+difficulty="$setting_difficulty"
+level_seed="$setting_level_seed"
+level_name="$setting_level_name"
 
 # Refresh source files to the target version.
 ynh_script_progression --message="Refreshing source files..." --weight=1
