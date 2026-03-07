@@ -28,6 +28,7 @@ check-setup: submodules
 	test -x $(CHECK_VENV)/bin/python || $(PYTHON) -m venv $(CHECK_VENV)
 	$(CHECK_VENV)/bin/python -m pip install --upgrade pip
 	$(CHECK_VENV)/bin/python -m pip install -r $(CHECK_DIR)/requirements.txt
+	$(CHECK_VENV)/bin/python -m pip install -r $(CHECK_DIR)/package_linter/requirements.txt
 
 check: check-setup
 	tmp_dir=$$(mktemp -d); \

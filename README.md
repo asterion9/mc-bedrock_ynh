@@ -116,8 +116,6 @@ A task is considered done when:
 1. Code and docs changes are committed in this repository.
 2. Static checks pass (`make lint`).
 3. Package checks run successfully (`make check`) with no blocking errors.
-4. Any changed runtime behavior has been manually validated on a YunoHost host.
-5. If relevant, upgrade and backup/restore behavior is verified to preserve persistent data.
 
 ## References
 

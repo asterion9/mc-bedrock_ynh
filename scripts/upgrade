@@ -21,12 +21,11 @@ if is_mc_service_running; then
 fi
 
 #=================================================
-# BACKFILL SETTINGS FROM EXISTING CONFIG
+# MIGRATION HELPERS
 #=================================================
 
 server_properties="$install_dir/server.properties"
 
-# Read a key from server.properties (first non-comment match wins).
 get_server_property() {
     local key="$1"
     local file="$2"
@@ -52,62 +51,86 @@ get_server_property() {
     done < "$file"
 }
 
-setting_server_name="$(ynh_app_setting_get --key="server_name")"
-setting_gamemode="$(ynh_app_setting_get --key="gamemode")"
-setting_difficulty="$(ynh_app_setting_get --key="difficulty")"
-setting_level_seed="$(ynh_app_setting_get --key="level_seed")"
-setting_level_name="$(ynh_app_setting_get --key="level_name")"
+#=================================================
+# MIGRATION 001 (< 1.26.3.1~ynh1): BACKFILL INPUT SETTINGS
+# Assumptions:
+# - old releases may not have persisted install input settings
+# - values can still be recovered from legacy server.properties
+#=================================================
 
-[ -n "$setting_server_name" ] || setting_server_name="$(get_server_property "server-name" "$server_properties")"
-[ -n "$setting_gamemode" ] || setting_gamemode="$(get_server_property "gamemode" "$server_properties")"
-[ -n "$setting_difficulty" ] || setting_difficulty="$(get_server_property "difficulty" "$server_properties")"
-[ -n "$setting_level_seed" ] || setting_level_seed="$(get_server_property "level-seed" "$server_properties")"
-[ -n "$setting_level_name" ] || setting_level_name="$(get_server_property "level-name" "$server_properties")"
+if ynh_compare_current_package_version --comparison lt --version 1.26.3.1~ynh1; then
+    setting_server_name="$(ynh_app_setting_get --key="server_name")"
+    setting_gamemode="$(ynh_app_setting_get --key="gamemode")"
+    setting_difficulty="$(ynh_app_setting_get --key="difficulty")"
+    setting_level_seed="$(ynh_app_setting_get --key="level_seed")"
+    setting_level_name="$(ynh_app_setting_get --key="level_name")"
 
-# Last-resort defaults when neither setting nor existing config contains the key.
-[ -n "$setting_server_name" ] || setting_server_name="Bedrock Server"
-[ -n "$setting_gamemode" ] || setting_gamemode="creative"
-[ -n "$setting_difficulty" ] || setting_difficulty="easy"
-[ -n "$setting_level_seed" ] || setting_level_seed=""
-[ -n "$setting_level_name" ] || setting_level_name="bedrock_level"
+    [ -n "$setting_server_name" ] || setting_server_name="$(get_server_property "server-name" "$server_properties")"
+    [ -n "$setting_gamemode" ] || setting_gamemode="$(get_server_property "gamemode" "$server_properties")"
+    [ -n "$setting_difficulty" ] || setting_difficulty="$(get_server_property "difficulty" "$server_properties")"
+    [ -n "$setting_level_seed" ] || setting_level_seed="$(get_server_property "level-seed" "$server_properties")"
+    [ -n "$setting_level_name" ] || setting_level_name="$(get_server_property "level-name" "$server_properties")"
 
-ynh_app_setting_set --key="server_name" --value="$setting_server_name"
-ynh_app_setting_set --key="gamemode" --value="$setting_gamemode"
-ynh_app_setting_set --key="difficulty" --value="$setting_difficulty"
-ynh_app_setting_set --key="level_seed" --value="$setting_level_seed"
-ynh_app_setting_set --key="level_name" --value="$setting_level_name"
+    [ -n "$setting_server_name" ] || setting_server_name="Bedrock Server"
+    [ -n "$setting_gamemode" ] || setting_gamemode="creative"
+    [ -n "$setting_difficulty" ] || setting_difficulty="easy"
+    [ -n "$setting_level_seed" ] || setting_level_seed=""
+    [ -n "$setting_level_name" ] || setting_level_name="bedrock_level"
 
-# Export values expected by template placeholders (__SERVER_NAME__, etc.).
-server_name="$setting_server_name"
-gamemode="$setting_gamemode"
-difficulty="$setting_difficulty"
-level_seed="$setting_level_seed"
-level_name="$setting_level_name"
+    ynh_app_setting_set --key="server_name" --value="$setting_server_name"
+    ynh_app_setting_set --key="gamemode" --value="$setting_gamemode"
+    ynh_app_setting_set --key="difficulty" --value="$setting_difficulty"
+    ynh_app_setting_set --key="level_seed" --value="$setting_level_seed"
+    ynh_app_setting_set --key="level_name" --value="$setting_level_name"
+
+    # Redeploy config templates once recovered values are persisted.
+    server_name="$setting_server_name"
+    gamemode="$setting_gamemode"
+    difficulty="$setting_difficulty"
+    level_seed="$setting_level_seed"
+    level_name="$setting_level_name"
+    ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
+    ynh_add_config --template="allowlist.json" --destination="$install_dir/allowlist.json"
+    ynh_add_config --template="permissions.json" --destination="$install_dir/permissions.json"
+fi
+
+#=================================================
+# MIGRATION 002 (< 1.26.3.1~ynh1): MOVE LEGACY WORLDS TO DATA_DIR
+# Assumptions:
+# - old releases may still store worlds in install_dir/worlds
+# - target layout requires persistent data_dir/worlds + symlink
+#=================================================
+
+if ynh_compare_current_package_version --comparison lt --version 1.26.3.1~ynh1; then
+    mkdir -p "$data_dir/worlds"
+    if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
+        if [ -d "$install_dir/worlds" ] && [ -z "$(ls -A "$data_dir/worlds" 2>/dev/null)" ]; then
+            ynh_secure_remove --file="$data_dir/worlds"
+            mv "$install_dir/worlds" "$data_dir/worlds"
+        elif [ -d "$install_dir/worlds" ]; then
+            cp -a "$install_dir/worlds/." "$data_dir/worlds/" 2>/dev/null || true
+            ynh_secure_remove --file="$install_dir/worlds"
+        else
+            ynh_secure_remove --file="$install_dir/worlds"
+        fi
+    fi
+    chown -R "$app:$app" "$data_dir/worlds"
+
+    # Enforce target layout after migration to persistent data_dir.
+    if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
+        ynh_secure_remove --file="$install_dir/worlds"
+    fi
+    ln -sfn "$data_dir/worlds" "$install_dir/worlds"
+fi
 
 # Refresh source files to the target version.
 ynh_script_progression --message="Refreshing source files..." --weight=1
 
-ynh_setup_source --dest_dir="$install_dir" --source_id="main"
+ynh_setup_source --dest_dir="$install_dir" --source_id="main" --keep="worlds server.properties"
 
 chmod o+x "$install_dir/bedrock_server"
 
-# Ensure worlds path always points to persistent data_dir.
-mkdir -p "$data_dir/worlds"
-if [ -e "$install_dir/worlds" ] && [ ! -L "$install_dir/worlds" ]; then
-    ynh_secure_remove --file="$install_dir/worlds"
-fi
-ln -sfn "$data_dir/worlds" "$install_dir/worlds"
-
-#=================================================
-# DEPLOY APP-MANAGED CONFIG FILES
-#=================================================
-
-ynh_add_config --template="server.properties" --destination="$install_dir/server.properties"
-ynh_add_config --template="allowlist.json" --destination="$install_dir/allowlist.json"
-ynh_add_config --template="permissions.json" --destination="$install_dir/permissions.json"
-
 ynh_add_systemd_config
-yunohost service add $app --description="Three-dimensional sandbox construction game" --log="/var/log/$app/$app.log" --needs_exposed_ports="$port"
 
 if [ "$was_running" -eq 1 ]; then
     start_mc_service
